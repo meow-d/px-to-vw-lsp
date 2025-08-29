@@ -29,6 +29,7 @@ this config file is used by the [cssrem vscode extension](https://marketplace.vi
 
 ## build
 ```sh
+git clone https://github.com/meow-d/px-to-vw-lsp
 cd px-to-vw-lsp
 go get ./cmd/px-to-vw-lsp
 go build ./cmd/px-to-vw-lsp
