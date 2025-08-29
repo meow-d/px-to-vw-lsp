@@ -1,5 +1,5 @@
 # px to vw conversion lsp
-before you tell me i could have saved 90% of the time by not implementating an lsp, have you considered that maybe out of the 8 billion people on earth, maybe there will be someone with this very specific use case who also happens to use helix? have they implemented plugins yet? why they even settle for their own scheme implementation after spending years arguing how every other option creates maintaince burden? would learning lisp unlock my third eye and chakhra and fix all of my life's problems? whqat the hell? all questions for you to ponder and distract you from my insecurities.
+before you tell me i could have saved 90% of the time by not implementating an lsp, have you considered that maybe out of the 8 billion people on earth, maybe there will be someone with this very specific use case who also happens to use helix? have they implemented plugins yet? why they even settle for their own scheme implementation after spending years arguing how every other option creates maintaince burden? would learning lisp unlock my third eye and chakhra and fix all of my life's problems? whqat the hell? all questions for you to ponder and distract you from the true problem that is my insecurities.
 
 ## usage
 1. download or build the binary
@@ -20,8 +20,8 @@ vim.lsp.start({
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/cipchk/vscode-cssrem/master/schema.json",
-  fixedDigits: 3,
-  vwDesign: 1920,
+  "fixedDigits": 3,
+  "vwDesign": 1920
 }
 ```
 
