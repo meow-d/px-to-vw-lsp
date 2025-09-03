@@ -36,3 +36,9 @@ go build ./cmd/px-to-vw-lsp
 # or: go build -o ~/.local/bin/px-to-vw-lsp ./cmd/px-to-vw-lsp
 ```
 
+## todo
+- [ ] monitor .cssrem for changes (rather than just reading once on startup)
+- [ ] auto create .cssrem...? maybe not?
+- [ ] workspace folders support
+- [ ] refactor config loading code
+- [ ] better logging?
