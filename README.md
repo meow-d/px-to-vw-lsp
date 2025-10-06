@@ -38,7 +38,10 @@ go build ./cmd/px-to-vw-lsp
 
 ## todo
 - [x] workspace folders support
+
+- [x] stop dumping everything into logs so that they are actually readable
+- [ ] more useful logs because now the logs have zero info
+
 - [ ] monitor .cssrem for changes (rather than just reading once on startup)
 - [ ] conversion in code lens, like what cssrem does?
 - [ ] refactor config loading code
-- [ ] better logging?

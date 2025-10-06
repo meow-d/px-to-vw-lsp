@@ -107,13 +107,14 @@ func (h *Handler) getConfigForDocument(uri protocol.DocumentURI) *Config {
 }
 
 func (h *Handler) DidOpen(ctx context.Context, params *protocol.DidOpenTextDocumentParams) error {
-	log.Sugar().Infof("didOpen: %v", params)
+	log.Sugar().Infof("didOpen: %v", params.TextDocument.URI)
+	log.Sugar().Infof("handler ptr: %p", h)
 	h.documents[params.TextDocument.URI] = splitLines(params.TextDocument.Text)
 	return nil
 }
 
 func (h *Handler) DidChange(ctx context.Context, params *protocol.DidChangeTextDocumentParams) error {
-	log.Sugar().Infof("didChange: %v", params)
+	log.Sugar().Infof("didChange: %v", params.TextDocument.URI)
 	if len(params.ContentChanges) > 0 {
 		h.documents[params.TextDocument.URI] = splitLines(params.ContentChanges[0].Text)
 	}
@@ -122,7 +123,7 @@ func (h *Handler) DidChange(ctx context.Context, params *protocol.DidChangeTextD
 
 func (h *Handler) DidClose(ctx context.Context, params *protocol.DidCloseTextDocumentParams) error {
 	log.Sugar().Infof("didClose: %v", params)
-	delete(h.documents, params.TextDocument.URI)
+	// delete(h.documents, params.TextDocument.URI)
 	return nil
 }
 
