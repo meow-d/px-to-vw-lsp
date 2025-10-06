@@ -7,12 +7,27 @@ before you tell me i could have saved 90% of the time by not implementating an l
 3. configure your editor. for example, in neovim:
 
 ```lua
--- i have no idea if this is the correct way lmao
-vim.lsp.start({
-	name = "px-to-vw",
-	cmd = { "px-to-vw-lsp" },
-	root_dir = vim.fn.getcwd(),
-})
+-- css px-to-vw
+local configs = require("lspconfig.configs")
+local util = require("lspconfig.util")
+
+if not configs["px_to_vw_lsp"] then
+  configs["px_to_vw_lsp"] = {
+    default_config = {
+      cmd = { "px-to-vw-lsp" },
+      filetypes = { "css", "scss", "less" },
+      root_dir = util.root_pattern(".git") or vim.fn.getcwd(),
+      single_file_support = true,
+      name = "px-to-vw",
+    },
+  }
+end
+
+lspconfig["px_to_vw_lsp"].setup {
+  on_attach = nvlsp.on_attach,
+  on_init = nvlsp.on_init,
+  capabilities = nvlsp.capabilities,
+}
 ```
 
 4. in your project root, create a `.cssrem` file with the following:
