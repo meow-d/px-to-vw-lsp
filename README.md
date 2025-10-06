@@ -40,5 +40,6 @@ go build ./cmd/px-to-vw-lsp
 - [ ] monitor .cssrem for changes (rather than just reading once on startup)
 - [ ] auto create .cssrem...? maybe not?
 - [ ] workspace folders support
+- [ ] conversion in code lens, like what cssrem does?
 - [ ] refactor config loading code
 - [ ] better logging?
