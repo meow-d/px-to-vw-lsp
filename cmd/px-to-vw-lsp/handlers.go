@@ -69,7 +69,6 @@ func (h Handler) DidChange(ctx context.Context, params *protocol.DidChangeTextDo
 
 func (h Handler) DidClose(ctx context.Context, params *protocol.DidCloseTextDocumentParams) error {
 	log.Sugar().Infof("didClose: %v", params)
-	// TODO is this necessary?
 	delete(h.documents, params.TextDocument.URI)
 	return nil
 }
