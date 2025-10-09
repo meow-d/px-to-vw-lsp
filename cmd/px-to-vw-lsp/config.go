@@ -12,14 +12,14 @@ type Config struct {
 
 func loadDefaultConfig() Config {
 	return Config{
-		ViewportWidth: 1920,
+		ViewportWidth: 1440,
 		UnitPrecision: 3,
 	}
 }
 
 func loadConfig(root string) Config {
 	defaultConfig := Config{
-		ViewportWidth: 1920,
+		ViewportWidth: 1440,
 		UnitPrecision: 3,
 	}
 
