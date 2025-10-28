@@ -30,19 +30,23 @@ func NewHandler(ctx context.Context, server protocol.Server, logger *zap.Logger)
 }
 
 func (h *Handler) Initialize(ctx context.Context, params *protocol.InitializeParams) (*protocol.InitializeResult, error) {
-	log.Sugar().Infof("initialize: %v", params)
+	log.Sugar().Infof("initialize: rootUri=%s, workspaceFolders=%d",
+		params.RootURI, len(params.WorkspaceFolders))
 
-	if params.WorkspaceFolders != nil {
+	if params.WorkspaceFolders != nil && len(params.WorkspaceFolders) > 0 {
 		h.workspaceFolders = params.WorkspaceFolders
 		for _, folder := range params.WorkspaceFolders {
 			folderPath := strings.TrimPrefix(string(folder.URI), "file://")
 			config := loadConfig(folderPath)
 			h.configs[folderPath] = &config
+			log.Sugar().Infof("Loaded config for workspace folder: %s (viewport: %.0f, precision: %d)",
+				folderPath, config.ViewportWidth, config.UnitPrecision)
 		}
 	} else if params.RootURI != "" {
 		rootPath := strings.TrimPrefix(string(params.RootURI), "file://")
 		config := loadConfig(rootPath)
 		h.configs[rootPath] = &config
+		log.Sugar().Warnf("Using deprecated RootURI parameter for initialization")
 	}
 
 	supported := true
@@ -57,7 +61,7 @@ func (h *Handler) Initialize(ctx context.Context, params *protocol.InitializePar
 			},
 			Workspace: &protocol.ServerCapabilitiesWorkspace{
 				WorkspaceFolders: &protocol.ServerCapabilitiesWorkspaceFolders{
-					Supported:            supported,
+					Supported:           supported,
 					ChangeNotifications: "workspace/didChangeWorkspaceFolders",
 				},
 			},
@@ -107,29 +111,37 @@ func (h *Handler) getConfigForDocument(uri protocol.DocumentURI) *Config {
 }
 
 func (h *Handler) DidOpen(ctx context.Context, params *protocol.DidOpenTextDocumentParams) error {
-	log.Sugar().Infof("didOpen: %v", params.TextDocument.URI)
-	log.Sugar().Infof("handler ptr: %p", h)
-	h.documents[params.TextDocument.URI] = splitLines(params.TextDocument.Text)
+	uri := params.TextDocument.URI
+	lineCount := len(strings.Split(params.TextDocument.Text, "\n"))
+
+	h.documents[uri] = strings.Split(params.TextDocument.Text, "\n")
+	log.Sugar().Infof("Document opened: %s (%d lines, %d bytes)",
+		uri, lineCount, len(params.TextDocument.Text))
 	return nil
 }
 
 func (h *Handler) DidChange(ctx context.Context, params *protocol.DidChangeTextDocumentParams) error {
-	log.Sugar().Infof("didChange: %v", params.TextDocument.URI)
+	uri := params.TextDocument.URI
+
 	if len(params.ContentChanges) > 0 {
-		h.documents[params.TextDocument.URI] = splitLines(params.ContentChanges[0].Text)
+		h.documents[uri] = strings.Split(params.ContentChanges[0].Text, "\n")
+		log.Sugar().Debugf("Document changed: %s (%d content changes)",
+			uri, len(params.ContentChanges))
 	}
 	return nil
 }
 
 func (h *Handler) DidClose(ctx context.Context, params *protocol.DidCloseTextDocumentParams) error {
-	log.Sugar().Infof("didClose: %v", params)
-	// delete(h.documents, params.TextDocument.URI)
+	uri := params.TextDocument.URI
+
+	// Clean up document tracking when file is closed
+	delete(h.documents, uri)
+	log.Sugar().Debugf("Document closed and cleaned up: %s", uri)
+
 	return nil
 }
 
 func (h *Handler) Completion(ctx context.Context, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	log.Sugar().Infof("completion: %v", params)
-
 	uri := params.TextDocument.URI
 	line := h.documents[uri][params.Position.Line]
 	prefix := line[:params.Position.Character]
@@ -146,12 +158,17 @@ func (h *Handler) Completion(ctx context.Context, params *protocol.CompletionPar
 	pxValueStr := match[1]
 	pxValue, err := strconv.ParseFloat(pxValueStr, 64)
 	if err != nil {
+		log.Sugar().Warnf("Failed to parse px value '%s' in %s:%d: %v",
+			pxValueStr, uri, params.Position.Line, err)
 		return nil, fmt.Errorf("failed to parse px value: %v", err)
 	}
 
 	config := h.getConfigForDocument(uri)
 	vwValue := (pxValue / float64(config.ViewportWidth)) * 100
 	vwValueStr := strconv.FormatFloat(vwValue, 'f', config.UnitPrecision, 64)
+
+	log.Sugar().Debugf("Conversion completed: %spx → %svw (viewport: %.0f)",
+		pxValueStr, vwValueStr, config.ViewportWidth)
 
 	return &protocol.CompletionList{
 		IsIncomplete: false,
