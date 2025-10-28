@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 )
 
 // config
@@ -18,29 +19,39 @@ func loadDefaultConfig() Config {
 }
 
 func loadConfig(root string) Config {
-	defaultConfig := Config{
-		ViewportWidth: 1440,
-		UnitPrecision: 3,
-	}
+	defaultConfig := loadDefaultConfig()
 
-	file, err := os.ReadFile(root + "/.cssrem")
+	cssremPath := filepath.Join(root, ".cssrem")
+	file, err := os.ReadFile(cssremPath)
 	if err != nil {
-		log.Sugar().Warnf("Failed to open config file: %v", err)
+		log.Sugar().Warnf("Failed to open config file %s: %v", cssremPath, err)
 		return defaultConfig
 	}
 
-	// SchemaJson is auto generated with https://github.com/omissis/go-jsonschema
-	// from cssrem schema: https://raw.githubusercontent.com/cipchk/vscode-cssrem/master/schema.json
+	cssremConfig, err := parseCssremConfig(file)
+	if err != nil {
+		log.Sugar().Warnf("Failed to parse config file %s: %v", cssremPath, err)
+		return defaultConfig
+	}
+
+	config := convertToConfig(*cssremConfig)
+	log.Sugar().Infof("Loaded config from %s: viewport=%.0f, precision=%d",
+		cssremPath, config.ViewportWidth, config.UnitPrecision)
+
+	return config
+}
+
+func parseCssremConfig(data []byte) (*SchemaJson, error) {
 	cssremConfig := SchemaJson{}
-	err = cssremConfig.UnmarshalJSON(file)
-	if err != nil {
-		log.Sugar().Warnf("Failed to parse config file: %v", err)
-		return defaultConfig
+	if err := cssremConfig.UnmarshalJSON(data); err != nil {
+		return nil, err
 	}
-	log.Sugar().Infof("Loaded config: %+v", cssremConfig)
+	return &cssremConfig, nil
+}
 
+func convertToConfig(schema SchemaJson) Config {
 	return Config{
-		ViewportWidth: cssremConfig.VwDesign,
-		UnitPrecision: int(cssremConfig.FixedDigits),
+		ViewportWidth: schema.VwDesign,
+		UnitPrecision: int(schema.FixedDigits),
 	}
 }
