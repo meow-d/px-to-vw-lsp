@@ -11,26 +11,15 @@ for example, in neovim:
 
 ```lua
 -- css px-to-vw
-local configs = require("lspconfig.configs")
-local util = require("lspconfig.util")
+vim.lsp.config("px_to_vw_lsp", {
+  cmd = { "px-to-vw-lsp", "--log-level=debug" },
+  filetypes = { "css", "scss", "less" },
+  root_dir = vim.fn.getcwd(),
+  workspace_required = false,
+  name = "px_to_vw_lsp",
+})
 
-if not configs["px_to_vw_lsp"] then
-  configs["px_to_vw_lsp"] = {
-    default_config = {
-      cmd = { "px-to-vw-lsp" },
-      filetypes = { "css", "scss", "less" },
-      root_dir = util.root_pattern(".git") or vim.fn.getcwd(),
-      single_file_support = true,
-      name = "px-to-vw",
-    },
-  }
-end
-
-lspconfig["px_to_vw_lsp"].setup {
-  on_attach = nvlsp.on_attach,
-  on_init = nvlsp.on_init,
-  capabilities = nvlsp.capabilities,
-}
+vim.lsp.enable("px_to_vw_lsp")
 ```
 
 ### 3. configure window height
