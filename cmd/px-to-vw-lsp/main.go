@@ -16,7 +16,7 @@ func parseFlags() (logLevel, logFile string) {
 func initLogger(logLevel, logFile string) *zap.Logger {
 	cfg := zap.NewDevelopmentConfig()
 	cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	cfg.OutputPaths = []string{"stdout", logFile}
+	cfg.OutputPaths = []string{"stderr", logFile}
 
 	level := zapcore.WarnLevel
 	switch logLevel {
