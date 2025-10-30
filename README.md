@@ -12,7 +12,9 @@ for example, in neovim:
 ```lua
 -- css px-to-vw
 vim.lsp.config("px_to_vw_lsp", {
-  cmd = { "px-to-vw-lsp", "--log-level=debug" },
+  -- altenratively
+  -- cmd = { "px-to-vw-lsp", "--log-level=debug" },
+  cmd = { "px-to-vw-lsp"},
   filetypes = { "css", "scss", "less" },
   root_dir = vim.fn.getcwd(),
   workspace_required = false,
@@ -52,6 +54,14 @@ go build ./cmd/px-to-vw-lsp
 ### test
 ```sh
 go test ./... -v
+```
+
+### debug
+```sh
+# to view logs
+tail -f /tmp/px-to-vw-lsp.log
+# for editor specific issues
+tail -f ~/.local/state/nvim/lsp.log
 ```
 
 ## todo
