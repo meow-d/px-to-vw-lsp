@@ -18,14 +18,16 @@ type Handler struct {
 	documents        map[protocol.DocumentURI][]string
 	workspaceFolders []protocol.WorkspaceFolder
 	configs          map[string]*Config
+	globalConfig     *GlobalConfig
 }
 
-func NewHandler(ctx context.Context, server protocol.Server, logger *zap.Logger) (*Handler, context.Context, error) {
+func NewHandler(ctx context.Context, server protocol.Server, logger *zap.Logger, globalConfig *GlobalConfig) (*Handler, context.Context, error) {
 	log = logger
 	return &Handler{
-		Server:    server,
-		documents: make(map[protocol.DocumentURI][]string),
-		configs:   make(map[string]*Config),
+		Server:       server,
+		documents:    make(map[protocol.DocumentURI][]string),
+		configs:      make(map[string]*Config),
+		globalConfig: globalConfig,
 	}, ctx, nil
 }
 
@@ -37,14 +39,14 @@ func (h *Handler) Initialize(ctx context.Context, params *protocol.InitializePar
 		h.workspaceFolders = params.WorkspaceFolders
 		for _, folder := range params.WorkspaceFolders {
 			folderPath := strings.TrimPrefix(string(folder.URI), "file://")
-			config := loadConfig(folderPath)
+			config := h.loadEffectiveConfig(h.globalConfig, folderPath, log)
 			h.configs[folderPath] = &config
-			log.Sugar().Infof("Loaded config for workspace folder: %s (viewport: %.0f, precision: %d)",
+			log.Sugar().Infof("Loaded effective config for workspace folder: %s (viewport: %.0f, precision: %d)",
 				folderPath, config.ViewportWidth, config.UnitPrecision)
 		}
 	} else if params.RootURI != "" {
 		rootPath := strings.TrimPrefix(string(params.RootURI), "file://")
-		config := loadConfig(rootPath)
+		config := h.loadEffectiveConfig(h.globalConfig, rootPath, log)
 		h.configs[rootPath] = &config
 		log.Sugar().Warnf("Using deprecated RootURI parameter for initialization")
 	}
@@ -90,7 +92,7 @@ func (h *Handler) DidChangeWorkspaceFolders(ctx context.Context, params *protoco
 	for _, added := range params.Event.Added {
 		h.workspaceFolders = append(h.workspaceFolders, added)
 		addedPath := strings.TrimPrefix(string(added.URI), "file://")
-		config := loadConfig(addedPath)
+		config := h.loadEffectiveConfig(h.globalConfig, addedPath, log)
 		h.configs[addedPath] = &config
 	}
 
@@ -106,7 +108,19 @@ func (h *Handler) getConfigForDocument(uri protocol.DocumentURI) *Config {
 		}
 	}
 
+	// If no project config found, return global config or default
+	if h.globalConfig != nil {
+		globalConfig := h.globalConfig.Get()
+		if globalConfig != nil {
+			log.Sugar().Debugf("Using global config for document %s: viewport=%.0f, precision=%d",
+				uri, globalConfig.ViewportWidth, globalConfig.UnitPrecision)
+			return globalConfig
+		}
+	}
+
 	defaultConfig := loadDefaultConfig()
+	log.Sugar().Debugf("Using default config for document %s: viewport=%.0f, precision=%d",
+		uri, defaultConfig.ViewportWidth, defaultConfig.UnitPrecision)
 	return &defaultConfig
 }
 
@@ -146,7 +160,7 @@ func (h *Handler) Completion(ctx context.Context, params *protocol.CompletionPar
 	line := h.documents[uri][params.Position.Line]
 	prefix := line[:params.Position.Character]
 
-	re := regexp.MustCompile(`(\d+(\.\d+)?)px$`)
+	re := regexp.MustCompile(`(-?\d+(\.\d+)?)px`)
 	match := re.FindStringSubmatch(prefix)
 	if match == nil {
 		return &protocol.CompletionList{
@@ -167,6 +181,21 @@ func (h *Handler) Completion(ctx context.Context, params *protocol.CompletionPar
 	vwValue := (pxValue / float64(config.ViewportWidth)) * 100
 	vwValueStr := strconv.FormatFloat(vwValue, 'f', config.UnitPrecision, 64)
 
+	// Calculate the range to replace more robustly
+	expectedReplaceText := pxValueStr + "px"
+	textBefore := prefix[:len(prefix)-len(expectedReplaceText)]
+
+	log.Sugar().Debugf("Completion debug: prefix='%s', pxValueStr='%s', expectedReplace='%s', textBefore='%s'",
+		prefix, pxValueStr, expectedReplaceText, textBefore)
+
+	// Validate that the text to replace matches our expectation
+	if len(prefix) < len(expectedReplaceText) ||
+		prefix[len(prefix)-len(expectedReplaceText):] != expectedReplaceText {
+		log.Sugar().Warnf("Unexpected text structure for completion in %s:%d. Expected '%s' at end of '%s'",
+			uri, params.Position.Line, expectedReplaceText, prefix)
+		return nil, fmt.Errorf("invalid text structure for completion")
+	}
+
 	log.Sugar().Debugf("Conversion completed: %spx → %svw (viewport: %.0f)",
 		pxValueStr, vwValueStr, config.ViewportWidth)
 
@@ -181,7 +210,7 @@ func (h *Handler) Completion(ctx context.Context, params *protocol.CompletionPar
 					Range: protocol.Range{
 						Start: protocol.Position{
 							Line:      params.Position.Line,
-							Character: params.Position.Character - uint32(len(pxValueStr)) - 2,
+							Character: uint32(len(textBefore)),
 						},
 						End: protocol.Position{
 							Line:      params.Position.Line,

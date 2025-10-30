@@ -35,14 +35,23 @@ it uses the same json as the [cssrem vscode extension](https://marketplace.visua
     "vwDesign": 1920
 }
 ```
-
-## build
+## development
+### clone
 ```sh
 git clone https://github.com/meow-d/px-to-vw-lsp
 cd px-to-vw-lsp
+```
+
+### build
+```sh
 go get ./cmd/px-to-vw-lsp
 go build ./cmd/px-to-vw-lsp
 # or: go build -o ~/.local/bin/px-to-vw-lsp ./cmd/px-to-vw-lsp
+```
+
+### test
+```sh
+go test ./... -v
 ```
 
 ## todo
@@ -51,10 +60,8 @@ go build ./cmd/px-to-vw-lsp
 - [x] more useful logs because now the logs have zero info
 - [x] refactor config loading code
 - [x] global configuration support with automatic file monitoring
-- [x] priority system: default < global < project config
-- [x] fix nil pointer dereference in global config initialization
-- [x] fix LSP protocol corruption by moving logs to stderr
 
+- [ ] clean up ai generated code
 - [ ] testing
 - [ ] monitor .cssrem for changes (rather than just reading once on startup)
 - [ ] conversion in code lens, like what cssrem does?

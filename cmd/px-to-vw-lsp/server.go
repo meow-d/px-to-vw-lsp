@@ -14,10 +14,19 @@ func StartServer(logger *zap.Logger) {
 	stream := &readWriteCloser{os.Stdin, os.Stdout}
 	conn := jsonrpc2.NewConn(jsonrpc2.NewStream(stream))
 
+	// Create global config manager
+	ctx := context.Background()
+	globalConfig, err := NewGlobalConfig(ctx, logger)
+	if err != nil {
+		logger.Sugar().Fatalf("init global config error: %v", err)
+	}
+	defer globalConfig.Close()
+
 	handler, ctx, err := NewHandler(
 		context.Background(),
 		protocol.ServerDispatcher(conn, logger),
 		logger,
+		globalConfig,
 	)
 	if err != nil {
 		logger.Sugar().Fatalf("init handler error: %v", err)
