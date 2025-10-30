@@ -3,8 +3,8 @@ before you tell me i could have saved 90% of the time by not implementating an l
 
 ## usage
 ### 1. install
-1. download or build the binary
-2. put it in `~/.local/bin` or somewhere in your `$PATH`
+1. [download](https://github.com/meow-d/px-to-vw-lsp/releases) or build the binary
+2. put it somewhere in your `$PATH`, like `~/.local/bin`
 
 ### 2. configure your editor
 for example, in neovim:
@@ -12,8 +12,7 @@ for example, in neovim:
 ```lua
 -- css px-to-vw
 vim.lsp.config("px_to_vw_lsp", {
-  -- altenratively
-  -- cmd = { "px-to-vw-lsp", "--log-level=debug" },
+  -- alternatively cmd = { "px-to-vw-lsp", "--log-level=debug" },
   cmd = { "px-to-vw-lsp"},
   filetypes = { "css", "scss", "less" },
   root_dir = vim.fn.getcwd(),
