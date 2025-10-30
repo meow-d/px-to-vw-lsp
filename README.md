@@ -24,7 +24,7 @@ vim.lsp.enable("px_to_vw_lsp")
 ```
 
 ### 3. configure window height
-- global config: `~/.local/share/px-to-vw-lsp/config.json`
+- global config: `~/.config/px-to-vw-lsp/config.json`
 - per-project config: `.cssrem` file in project root
 
 it uses the same json as the [cssrem vscode extension](https://marketplace.visualstudio.com/items?itemName=cipchk.cssrem), though all options other than the two above are ignored here.
