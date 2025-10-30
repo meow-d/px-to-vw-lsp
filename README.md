@@ -24,7 +24,7 @@ vim.lsp.enable("px_to_vw_lsp")
 ```
 
 ### 3. configure window height
-- global config: `~/.config/px-to-vw-lsp/config.json`
+- global config: [os.UserConfigDir()](https://pkg.go.dev/os#NewFile)/px-to-vw-lsp/config.json, on linux it's `~/.config/px-to-vw-lsp/config.json` by default
 - per-project config: `.cssrem` file in project root
 
 it uses the same json as the [cssrem vscode extension](https://marketplace.visualstudio.com/items?itemName=cipchk.cssrem), though all options other than the two above are ignored here.
@@ -36,6 +36,7 @@ it uses the same json as the [cssrem vscode extension](https://marketplace.visua
     "vwDesign": 1920
 }
 ```
+
 ## development
 ### clone
 ```sh
@@ -50,7 +51,7 @@ go build ./cmd/px-to-vw-lsp
 # or: go build -o ~/.local/bin/px-to-vw-lsp ./cmd/px-to-vw-lsp
 ```
 
-### test
+### run tests
 ```sh
 go test ./... -v
 ```
@@ -59,7 +60,7 @@ go test ./... -v
 ```sh
 # to view logs
 tail -f /tmp/px-to-vw-lsp.log
-# for editor specific issues
+# for editor specific issues (neovim example)
 tail -f ~/.local/state/nvim/lsp.log
 ```
 
