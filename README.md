@@ -70,8 +70,8 @@ tail -f ~/.local/state/nvim/lsp.log
 - [x] more useful logs because now the logs have zero info
 - [x] refactor config loading code
 - [x] global configuration support with automatic file monitoring
+- [x] testing
 
 - [ ] clean up ai generated code
-- [ ] testing
 - [ ] monitor .cssrem for changes (rather than just reading once on startup)
 - [ ] conversion in code lens, like what cssrem does?
